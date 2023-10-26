@@ -1,21 +1,41 @@
 import { useNavigation } from '@react-navigation/native';
+import { StackTypes } from '../../routes';
 import { StatusBar } from 'expo-status-bar';
 import { useState } from 'react';
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { TextInput } from 'react-native-gesture-handler';
+import { StyleSheet, Text, TouchableOpacity, View, TextInput } from 'react-native';
+import { auth, firebase } from '../../../firebase.js'
+import useStore from '../../useStore'
 
 type Props = {}
 
 const SignIn = (props: Props) => {
- 
-    const navigation = useNavigation()
+
+    const navigation = useNavigation<StackTypes>()
     const [email, setEmail] = useState('')
     const [password, setPassword] = useState('')
+
+    const store = useStore()
+
+    const handleLogin = async () => {
+
+        let threwError = false;
+        await auth.signInWithEmailAndPassword(email, password).catch((error: { message: any; }) => {
+            alert(error.message);
+            threwError = true;
+        });
+
+        if (!threwError) {
+            if (auth.currentUser) {
+                let userId = auth.currentUser.uid
+                store.signIn(userId)
+            }
+        }
+    };
 
     return (
         <View style={styles.container}>
             <StatusBar style="auto" />
-            <Text style={styles.title}>Olha o login</Text>
+            <Text style={styles.title}>Faça seu login</Text>
             <View style={styles.inputGroup}>
                 <TextInput
                     placeholder='Email'
@@ -28,8 +48,11 @@ const SignIn = (props: Props) => {
                     style={styles.input}
                 />
             </View>
-            <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('Home')}>
+            <TouchableOpacity style={styles.button} onPress={() => handleLogin()}>
                 <Text style={styles.buttonText}>Entrar</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('SignUp')}>
+                <Text style={styles.buttonText}>Cadastrar</Text>
             </TouchableOpacity>
         </View>
     )
@@ -43,8 +66,8 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
     },
     title: {
-        fontSize: 32,
-
+        fontSize: 26,
+        marginBottom: 10,
     },
     inputGroup: {
         width: '100%',
@@ -61,12 +84,12 @@ const styles = StyleSheet.create({
     },
     button: {
         width: '75%',
-        height: 55,
+        height: 45,
         alignItems: 'center',
         justifyContent: 'center',
         marginTop: 10,
-        borderRadius: 10,
-        backgroundColor: 'blue'
+        borderRadius: 3,
+        backgroundColor: 'black'
     },
     buttonText: {
         color: '#FFFFFF',
